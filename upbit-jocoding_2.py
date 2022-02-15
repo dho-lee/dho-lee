@@ -4,16 +4,17 @@ import datetime
 
 access = "0GVlK8uCMExmEWxSei8xVqpxgUo7SfAcE4YyIrIG"
 secret = "looLUi9wsjRJ5eiqcMWKWiufbLRlnTj9xkyNDxEP"
+interval = "minute240"
 
-def get_target_price(ticker, k):
+def get_target_price(ticker, interval, k):
     """변동성 돌파 전략으로 매수 목표가 조회"""
-    df = pyupbit.get_ohlcv(ticker, interval="minute240", count=20)
+    df = pyupbit.get_ohlcv(ticker, interval = interval, count=14)
     target_price = df.iloc[0]['close'] + (df.iloc[0]['high'] - df.iloc[0]['low']) * k
     return target_price
 
-def get_start_time(ticker):
+def get_start_time(ticker, interval):
     """시작 시간 조회"""
-    df = pyupbit.get_ohlcv(ticker, interval="minute240", count=1)
+    df = pyupbit.get_ohlcv(ticker, interval=interval, count=1)
     start_time = df.index[0]
     return start_time
 
@@ -40,22 +41,21 @@ print("autotrade start")
 while True:
     try:
         now = datetime.datetime.now()
-        start_time = get_start_time("KRW-BTC")
-        end_time = start_time + datetime.timedelta(hours=4)
+        start_time = get_start_time("KRW-BTC", interval)
+        end_time = start_time + datetime.timedelta(days=1) - datetime.timedelta(seconds=5)
 
         # 9:00 < 현재 < 8:59:50
-        if start_time < now < end_time - datetime.timedelta(seconds=10):
-            target_price = get_target_price("KRW-BTC", 0.45)
+        if start_time < now < end_time:
+            target_price = get_target_price("KRW-BTC", interval, 0.15)
             current_price = get_current_price("KRW-BTC")
             if target_price < current_price:
                 krw = get_balance("KRW")
                 if krw > 5000:
                     upbit.buy_market_order("KRW-BTC", krw*0.9995)
-        else:
+        elif now > end_time:
             btc = get_balance("BTC")
-            if btc > 0.00008:
-                upbit.sell_market_order("KRW-BTC", btc)
-        time.sleep(1)
+            upbit.sell_market_order("KRW-BTC", btc)
+            time.sleep(1)
     except Exception as e:
         print(e)
         time.sleep(1)
