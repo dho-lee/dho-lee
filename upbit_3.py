@@ -8,19 +8,19 @@ interval = "minute240"
 
 def get_target_price(ticker, k):
     """변동성 돌파 전략으로 매수 목표가 조회"""
-    df = pyupbit.get_ohlcv(ticker, interval=interval, count=2)
+    df = pyupbit.get_ohlcv(ticker, interval="minute240", count=2)
     target_price = df.iloc[0]['close'] + (df.iloc[0]['high'] - df.iloc[0]['low']) * k
     return target_price
 
 def get_start_time(ticker):
     """시작 시간 조회"""
-    df = pyupbit.get_ohlcv(ticker, interval=interval, count=1)
+    df = pyupbit.get_ohlcv(ticker, interval="minute240", count=1)
     start_time = df.index[0]
     return start_time
 
 def get_ma15(ticker):
     """15일 이동 평균선 조회"""
-    df = pyupbit.get_ohlcv(ticker, interval=interval, count=15)
+    df = pyupbit.get_ohlcv(ticker, interval="minute240", count=15)
     ma15 = df['close'].rolling(15).mean().iloc[-1]
     return ma15
 
@@ -48,8 +48,9 @@ while True:
     try:
         now = datetime.datetime.now()
         start_time = get_start_time("KRW-BTC")
-        end_time = start_time + datetime.timedelta(minutes = 240)- datetime.timedelta(seconds=5)
-        if start_time < now < end_time :
+        end_time = start_time + datetime.timedelta(minutes=240)
+
+        if start_time < now < end_time - datetime.timedelta(seconds=10):
             target_price = get_target_price("KRW-BTC", 0.15)
             ma15 = get_ma15("KRW-BTC")
             current_price = get_current_price("KRW-BTC")
@@ -57,10 +58,11 @@ while True:
                 krw = get_balance("KRW")
                 if krw > 5000:
                     upbit.buy_market_order("KRW-BTC", krw*0.9995)
-        elif now > end_time:
+        else:
             btc = get_balance("BTC")
-            upbit.sell_market_order("KRW-BTC", btc)
-            time.sleep(1)
+            if btc > 0.00008:
+                upbit.sell_market_order("KRW-BTC", btc)
+        time.sleep(1)
     except Exception as e:
         print(e)
-        time.sleep(1) 
+        time.sleep(1)
