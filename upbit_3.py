@@ -2,8 +2,8 @@ import time
 import pyupbit
 import datetime
 
-access = "0GVlK8uCMExmEWxSei8xVqpxgUo7SfAcE4YyIrIG"
-secret = "looLUi9wsjRJ5eiqcMWKWiufbLRlnTj9xkyNDxEP"
+access = "aaa"
+secret = "aaa"
 interval = "minute240"
 
 def get_target_price(ticker, k):
